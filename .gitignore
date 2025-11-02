@@ -8,3 +8,5 @@ node_modules
 .env.test
 .env.production
 logs
+dist
+*.tsbuildinfo

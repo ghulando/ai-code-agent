@@ -1,3 +1,25 @@
+FROM node:18-bullseye-slim AS builder
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY package*.json ./
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
+
+RUN npm ci
+
+COPY src/ ./src/
+
+RUN npm run build
+
 FROM node:18-bullseye-slim
 
 WORKDIR /app
@@ -16,7 +38,7 @@ COPY package*.json ./
 
 RUN npm ci --omit=dev && npm cache clean --force
 
-COPY src/ ./src/
+COPY --from=builder /app/dist ./dist
 
 RUN useradd --create-home --shell /bin/bash --user-group --uid 1001 appuser
 
