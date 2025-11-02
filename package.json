@@ -1,0 +1,33 @@
+{
+  "name": "code-agent",
+  "version": "1.0.0",
+  "description": "HTTP wrapper for OpenAI Codex CLI",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "docker:build": "docker build -t codex-wrapper .",
+    "docker:run": "docker run -p 3002:3002 -e OPENAI_API_KEY=$OPENAI_API_KEY codex-wrapper"
+  },
+  "keywords": [
+    "codex",
+    "openai",
+    "cli",
+    "wrapper",
+    "http"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

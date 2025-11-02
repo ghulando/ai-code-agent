@@ -1,0 +1,40 @@
+services:
+  codex:
+    build: .
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
+      - DEFAULT_MODEL=azure/gpt-5-mini
+      - CODEX_CAPTURE_LOGS=${CODEX_CAPTURE_LOGS:-true}
+      - CODEX_REAL_TIME_STREAMING=${CODEX_REAL_TIME_STREAMING:-true}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - codex-config:/home/appuser/.codex
+      - /Users:/Users:ro
+      - /tmp:/tmp:ro
+    networks:
+      - codex-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    stdin_open: true
+    tty: true
+
+volumes:
+  codex-config:
+
+networks:
+  codex-network:
+    driver: bridge
