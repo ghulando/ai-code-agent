@@ -13,7 +13,7 @@ export interface AppConfig {
 }
 
 export const appConfig = (): AppConfig => ({
-  port: parseInt(process.env.PORT, 10) || 3002,
+  port: (process.env.PORT !== undefined && !isNaN(parseInt(process.env.PORT, 10)) ? parseInt(process.env.PORT, 10) : 3002),
   nodeEnv: process.env.NODE_ENV || 'development',
   model: {
     default: process.env.DEFAULT_MODEL || 'azure/gpt-5-mini',
