@@ -69,7 +69,11 @@ export class AnalyzeRepositoryService {
       console.error('❌ AnalyzeRepository service failed:', error.message);
 
       // If it's already a domain error, re-throw
-      if (error.name && error.name.includes('Error')) {
+      if (
+        error instanceof ValidationError ||
+        error instanceof CodexExecutionError ||
+        error instanceof PathAccessError
+      ) {
         throw error;
       }
 
