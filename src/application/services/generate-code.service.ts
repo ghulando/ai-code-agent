@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { CodexCliService } from '../../infrastructure/codex/codex-cli.service';
+import { CliFactoryService } from '../../infrastructure/cli-factory/cli-factory.service';
 import { CodeGeneration } from '../../domain/entities/CodeGeneration';
-import { ValidationError, CodexExecutionError } from '../../domain/errors';
+import { ValidationError, CodexExecutionError, GeminiExecutionError } from '../../domain/errors';
 
 /**
  * Generate Code Service
@@ -9,7 +9,7 @@ import { ValidationError, CodexExecutionError } from '../../domain/errors';
  */
 @Injectable()
 export class GenerateCodeService {
-  constructor(private readonly codexService: CodexCliService) {}
+  constructor(private readonly cliFactory: CliFactoryService) {}
 
   /**
    * Execute the service
@@ -30,8 +30,11 @@ export class GenerateCodeService {
     }
 
     try {
+      // Get appropriate CLI service
+      const cliService = this.cliFactory.getCliService();
+      
       // Execute through service
-      const result = await this.codexService.generateCode(
+      const result = await cliService.generateCode(
         codeGeneration.getPrompt(),
         codeGeneration.getConfig(),
       );
@@ -47,7 +50,11 @@ export class GenerateCodeService {
     } catch (error) {
       console.error('❌ GenerateCode service failed:', error.message);
 
-      throw new CodexExecutionError('Failed to generate code', error, {
+      // Determine which error type to throw based on CLI type
+      const cliType = process.env.CLI_TYPE?.toLowerCase() || 'codex';
+      const ErrorClass = cliType === 'gemini' ? GeminiExecutionError : CodexExecutionError;
+
+      throw new ErrorClass('Failed to generate code', error, {
         prompt: codeGeneration.getPrompt().substring(0, 100),
       });
     }

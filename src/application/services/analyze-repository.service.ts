@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CodexCliService } from '../../infrastructure/codex/codex-cli.service';
+import { CliFactoryService } from '../../infrastructure/cli-factory/cli-factory.service';
 import { PathValidatorService } from '../../infrastructure/validation/path-validator.service';
 import { ResponseFormatterService } from '../../infrastructure/formatters/response-formatter.service';
 import { RepositoryAnalysis } from '../../domain/entities/RepositoryAnalysis';
-import { ValidationError, CodexExecutionError, PathAccessError } from '../../domain/errors';
+import { ValidationError, CodexExecutionError, GeminiExecutionError, PathAccessError } from '../../domain/errors';
 
 /**
  * Analyze Repository Service
@@ -12,7 +12,7 @@ import { ValidationError, CodexExecutionError, PathAccessError } from '../../dom
 @Injectable()
 export class AnalyzeRepositoryService {
   constructor(
-    private readonly codexService: CodexCliService,
+    private readonly cliFactory: CliFactoryService,
     private readonly pathValidator: PathValidatorService,
     private readonly responseFormatter: ResponseFormatterService,
   ) {}
@@ -48,8 +48,11 @@ export class AnalyzeRepositoryService {
     }
 
     try {
+      // Get appropriate CLI service
+      const cliService = this.cliFactory.getCliService();
+      
       // Execute through service
-      const result = await this.codexService.analyzeRepository(
+      const result = await cliService.analyzeRepository(
         pathValidation.normalizedPath || repoAnalysis.getRepositoryPath(),
         repoAnalysis.getQuery(),
         repoAnalysis.getConfig(),
@@ -72,12 +75,17 @@ export class AnalyzeRepositoryService {
       if (
         error instanceof ValidationError ||
         error instanceof CodexExecutionError ||
+        error instanceof GeminiExecutionError ||
         error instanceof PathAccessError
       ) {
         throw error;
       }
 
-      throw new CodexExecutionError('Failed to analyze repository', error, {
+      // Determine which error type to throw based on CLI type
+      const cliType = process.env.CLI_TYPE?.toLowerCase() || 'codex';
+      const ErrorClass = cliType === 'gemini' ? GeminiExecutionError : CodexExecutionError;
+
+      throw new ErrorClass('Failed to analyze repository', error, {
         repositoryPath: repoAnalysis.getRepositoryPath(),
         query: repoAnalysis.getQuery().substring(0, 100),
       });
