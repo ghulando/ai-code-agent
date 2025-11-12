@@ -51,7 +51,6 @@ export class GenerateCodeService {
       console.error('❌ GenerateCode service failed:', error.message);
 
       // Determine which error type to throw based on CLI type
-      const cliType = this.cliFactory.getCliType();
       const ErrorClass = this.cliFactory.getErrorClass();
 
       throw new ErrorClass('Failed to generate code', error, {

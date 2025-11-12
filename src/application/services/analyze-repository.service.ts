@@ -82,8 +82,7 @@ export class AnalyzeRepositoryService {
       }
 
       // Determine which error type to throw based on CLI type
-      const cliType = process.env.CLI_TYPE?.toLowerCase() || 'codex';
-      const ErrorClass = cliType === 'gemini' ? GeminiExecutionError : CodexExecutionError;
+      const ErrorClass = this.cliFactory.getErrorClass();
 
       throw new ErrorClass('Failed to analyze repository', error, {
         repositoryPath: repoAnalysis.getRepositoryPath(),
