@@ -20,7 +20,7 @@ export class CliFactoryService {
    * Defaults to 'codex' for backward compatibility
    */
   getCliService(): CodexCliService | GeminiCliService {
-    const cliType = process.env.CLI_TYPE?.toLowerCase() || 'codex';
+    const cliType = (this.configService.get<string>('cliType')?.toLowerCase() || 'codex');
     
     console.log(`🔧 Using CLI type: ${cliType}`);
     
