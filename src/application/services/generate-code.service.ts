@@ -51,8 +51,8 @@ export class GenerateCodeService {
       console.error('❌ GenerateCode service failed:', error.message);
 
       // Determine which error type to throw based on CLI type
-      const cliType = process.env.CLI_TYPE?.toLowerCase() || 'codex';
-      const ErrorClass = cliType === 'gemini' ? GeminiExecutionError : CodexExecutionError;
+      const cliType = this.cliFactory.getCliType();
+      const ErrorClass = this.cliFactory.getErrorClass();
 
       throw new ErrorClass('Failed to generate code', error, {
         prompt: codeGeneration.getPrompt().substring(0, 100),
