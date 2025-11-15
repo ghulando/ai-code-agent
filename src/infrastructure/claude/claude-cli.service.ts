@@ -3,18 +3,18 @@ import { ConfigService } from '@nestjs/config';
 import { spawn } from 'child_process';
 
 /**
- * GeminiCLIService - Infrastructure Implementation
- * Implements Gemini CLI integration using NestJS Injectable
+ * ClaudeCLIService - Infrastructure Implementation
+ * Implements Claude CLI integration using NestJS Injectable
  */
 @Injectable()
-export class GeminiCliService {
+export class ClaudeCliService {
   constructor(private configService: ConfigService) {}
 
   async generateCode(prompt: string, requestConfig: any = {}) {
     const options = {
       model: this.configService.get<string>('model.default'),
-      maxRetries: this.configService.get<number>('gemini.maxRetries'),
-      retryDelay: this.configService.get<number>('gemini.retryDelay'),
+      maxRetries: this.configService.get<number>('claude.maxRetries'),
+      retryDelay: this.configService.get<number>('claude.retryDelay'),
       config: requestConfig,
     };
 
@@ -28,8 +28,8 @@ export class GeminiCliService {
   async analyzeRepository(repositoryPath: string, query: string, requestConfig: any = {}) {
     const options = {
       model: this.configService.get<string>('model.default'),
-      maxRetries: this.configService.get<number>('gemini.maxRetries'),
-      retryDelay: this.configService.get<number>('gemini.retryDelay'),
+      maxRetries: this.configService.get<number>('claude.maxRetries'),
+      retryDelay: this.configService.get<number>('claude.retryDelay'),
       workingDirectory: repositoryPath,
       config: requestConfig,
     };
@@ -51,7 +51,7 @@ export class GeminiCliService {
         options.model = this.configService.get<string>('model.default');
       }
 
-      const command = 'gemini';
+      const command = 'claude';
       const args = [
         'exec',
         '--skip-git-repo-check',
@@ -75,27 +75,27 @@ export class GeminiCliService {
 
       args.push(`"${prompt.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
 
-      console.log(`🚀 Starting Gemini CLI execution with model: ${options.model}`);
+      console.log(`🚀 Starting Claude CLI execution with model: ${options.model}`);
       if (options.workingDirectory) {
         console.log(`📁 Working directory: ${options.workingDirectory}`);
       }
       console.log(`💬 Prompt length: ${prompt.length} characters`);
 
-      const result = await this.executeGeminiCommandStreaming(command, args, {
+      const result = await this.executeClaudeCommandStreaming(command, args, {
         env: {
           ...process.env,
-          GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-          GOOGLE_GEMINI_BASE_URL: process.env.GOOGLE_GEMINI_BASE_URL || undefined,
+          ANTHROPIC_AUTH_TOKEN: process.env.ANTHROPIC_AUTH_TOKEN,
+          ANTHROPIC_BASE_URL: process.env.ANTHROPIC_BASE_URL || undefined,
           CI: 'true',
           FORCE_COLOR: '0',
-          GEMINI_QUIET_MODE: '1',
+          CLAUDE_QUIET_MODE: '1',
           NO_COLOR: '1',
         },
         cwd: options.workingDirectory,
-        timeout: this.configService.get<number>('gemini.timeout'),
+        timeout: this.configService.get<number>('claude.timeout'),
       });
 
-      const parsedEvents = this.parseGeminiEvents(result.stdout);
+      const parsedEvents = this.parseClaudeEvents(result.stdout);
       const finalOutput = parsedEvents.finalOutput;
 
       if (finalOutput && finalOutput.trim()) {
@@ -120,18 +120,18 @@ export class GeminiCliService {
       }
 
       if (error.code === 'ENOENT') {
-        throw new Error('Gemini CLI not found. Please ensure it is installed and in PATH.');
+        throw new Error('Claude CLI not found. Please ensure it is installed and in PATH.');
       }
 
       if (error.signal === 'SIGTERM' || error.signal === 'SIGKILL') {
-        throw new Error('Gemini command was terminated due to timeout or system signal.');
+        throw new Error('Claude command was terminated due to timeout or system signal.');
       }
 
       throw error;
     }
   }
 
-  executeGeminiCommandStreaming(command: string, args: string[], options: any = {}): Promise<any> {
+  executeClaudeCommandStreaming(command: string, args: string[], options: any = {}): Promise<any> {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
       const events: any[] = [];
@@ -176,14 +176,14 @@ export class GeminiCliService {
 
               if (event.msg && !noisyTypes.includes(event.msg.type)) {
                 if (event.msg.content) {
-                  console.log(`Gemini CLI Event: ${event.msg.content}`);
+                  console.log(`Claude CLI Event: ${event.msg.content}`);
                 }
                 if (event.msg.message) {
-                  console.log(`Gemini CLI Event: ${event.msg.message}`);
+                  console.log(`Claude CLI Event: ${event.msg.message}`);
                 }
               }
             } catch (e) {
-              console.log(`Gemini CLI Event: ${line.trim()}`);
+              console.log(`Claude CLI Event: ${line.trim()}`);
             }
           }
         }
@@ -203,14 +203,14 @@ export class GeminiCliService {
             events.push(event);
 
             if (event.msg && event.msg.content) {
-              console.log(`Gemini CLI Event: ${event.msg.content}`);
+              console.log(`Claude CLI Event: ${event.msg.content}`);
             }
           } catch (e) {
-            console.log(`Gemini CLI Event: ${currentLine.trim()}`);
+            console.log(`Claude CLI Event: ${currentLine.trim()}`);
           }
         }
 
-        console.log(`✅ Gemini CLI execution completed (${stdout.length} chars received)`);
+        console.log(`✅ Claude CLI execution completed (${stdout.length} chars received)`);
 
         if (code === 0) {
           resolve({
@@ -221,7 +221,7 @@ export class GeminiCliService {
             events,
           });
         } else {
-          reject(new Error(`Gemini CLI exited with code ${code}. stderr: ${stderr}`));
+          reject(new Error(`Claude CLI exited with code ${code}. stderr: ${stderr}`));
         }
       });
 
@@ -232,13 +232,13 @@ export class GeminiCliService {
       if (options.timeout) {
         setTimeout(() => {
           child.kill('SIGTERM');
-          reject(new Error('Gemini CLI command timed out'));
+          reject(new Error('Claude CLI command timed out'));
         }, options.timeout);
       }
     });
   }
 
-  parseGeminiEvents(stdout: string) {
+  parseClaudeEvents(stdout: string) {
     const lines = stdout.split('\n').filter((line) => line.trim());
     const events: any[] = [];
     let finalOutput = '';

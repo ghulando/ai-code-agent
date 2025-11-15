@@ -16,6 +16,11 @@ export interface AppConfig {
     retryDelay: number;
     timeout: number;
   };
+  claude: {
+    maxRetries: number;
+    retryDelay: number;
+    timeout: number;
+  };
 }
 
 export const appConfig = (): AppConfig => ({
@@ -32,6 +37,11 @@ export const appConfig = (): AppConfig => ({
     timeout: 300000,
   },
   gemini: {
+    maxRetries: 3,
+    retryDelay: 5000,
+    timeout: 300000,
+  },
+  claude: {
     maxRetries: 3,
     retryDelay: 5000,
     timeout: 300000,
