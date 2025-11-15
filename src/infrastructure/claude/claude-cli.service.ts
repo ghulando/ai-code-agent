@@ -73,7 +73,7 @@ export class ClaudeCliService {
         });
       }
 
-      args.push(`"${prompt.replace(/"/g, '\\"')}"`);
+      args.push(`"${prompt.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
 
       console.log(`🚀 Starting Claude CLI execution with model: ${options.model}`);
       if (options.workingDirectory) {

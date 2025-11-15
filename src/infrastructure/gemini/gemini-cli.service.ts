@@ -73,7 +73,7 @@ export class GeminiCliService {
         });
       }
 
-      args.push(`"${prompt.replace(/"/g, '\\"')}"`);
+      args.push(`"${prompt.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
 
       console.log(`🚀 Starting Gemini CLI execution with model: ${options.model}`);
       if (options.workingDirectory) {
