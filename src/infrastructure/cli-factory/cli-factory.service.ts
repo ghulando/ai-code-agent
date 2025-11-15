@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CodexCliService } from '../codex/codex-cli.service';
 import { GeminiCliService } from '../gemini/gemini-cli.service';
-import { CodexExecutionError, GeminiExecutionError } from '../../domain/errors';
+import { ClaudeCliService } from '../claude/claude-cli.service';
+import { CodexExecutionError, GeminiExecutionError, ClaudeExecutionError } from '../../domain/errors';
 
 /**
  * CLI Factory Service
@@ -14,19 +15,24 @@ export class CliFactoryService {
     private readonly configService: ConfigService,
     private readonly codexService: CodexCliService,
     private readonly geminiService: GeminiCliService,
+    private readonly claudeService: ClaudeCliService,
   ) {}
 
   /**
    * Get the appropriate CLI service based on CLI_TYPE environment variable
    * Defaults to 'codex' for backward compatibility
    */
-  getCliService(): CodexCliService | GeminiCliService {
+  getCliService(): CodexCliService | GeminiCliService | ClaudeCliService {
     const cliType = this.getCliType();
     
     console.log(`🔧 Using CLI type: ${cliType}`);
     
     if (cliType === 'gemini') {
       return this.geminiService;
+    }
+    
+    if (cliType === 'claude') {
+      return this.claudeService;
     }
     
     return this.codexService;
@@ -43,8 +49,14 @@ export class CliFactoryService {
   /**
    * Get the appropriate error class based on CLI type
    */
-  getErrorClass(): typeof CodexExecutionError | typeof GeminiExecutionError {
+  getErrorClass(): typeof CodexExecutionError | typeof GeminiExecutionError | typeof ClaudeExecutionError {
     const cliType = this.getCliType();
-    return cliType === 'gemini' ? GeminiExecutionError : CodexExecutionError;
+    if (cliType === 'gemini') {
+      return GeminiExecutionError;
+    }
+    if (cliType === 'claude') {
+      return ClaudeExecutionError;
+    }
+    return CodexExecutionError;
   }
 }
